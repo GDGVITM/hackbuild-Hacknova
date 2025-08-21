@@ -1,0 +1,205 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Emergency Management Command Center Design System */
+/* Professional dark theme optimized for 24/7 operations */
+
+@layer base {
+  :root {
+    /* Command Center Dark Theme */
+    --background: 218 25% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 217 32% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217 32% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217 25% 16%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 25% 16%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 32% 20%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 25% 20%;
+    --input: 217 25% 16%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.375rem;
+
+    /* Emergency Alert System Colors */
+    --alert-critical: 0 84% 60%;
+    --alert-critical-bg: 0 84% 15%;
+    --alert-high: 25 95% 53%;
+    --alert-high-bg: 25 95% 15%;
+    --alert-medium: 48 89% 50%;
+    --alert-medium-bg: 48 89% 15%;
+    --alert-low: 142 76% 36%;
+    --alert-low-bg: 142 76% 15%;
+    --alert-resolved: 215 16% 47%;
+    --alert-resolved-bg: 215 16% 20%;
+
+    /* Performance Indicators */
+    --status-operational: 142 76% 36%;
+    --status-warning: 48 89% 50%;
+    --status-critical: 0 84% 60%;
+    --status-offline: 215 16% 47%;
+
+    /* Command Center Gradients */
+    --gradient-command: linear-gradient(135deg, hsl(var(--background)), hsl(217 25% 12%));
+    --gradient-alert: linear-gradient(90deg, hsl(var(--alert-critical)) 0%, hsl(var(--alert-high)) 100%);
+    --gradient-status: linear-gradient(90deg, hsl(var(--status-operational)) 0%, hsl(var(--primary)) 100%);
+
+    /* Shadows and Effects */
+    --shadow-command: 0 25px 50px -12px hsl(217 25% 4% / 0.6);
+    --shadow-alert: 0 0 30px hsl(var(--alert-critical) / 0.3);
+    --shadow-glow: 0 0 20px hsl(var(--primary) / 0.4);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --pulse-duration: 2s;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Light theme variations (for contrast testing) */
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 218 25% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 218 25% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  /* Command Center Components */
+  .command-panel {
+    @apply bg-card border border-border rounded-lg shadow-lg;
+  }
+
+  .alert-critical {
+    @apply bg-red-950/50 border-red-500/50 text-red-100;
+    box-shadow: 0 0 20px hsl(var(--alert-critical) / 0.2);
+  }
+
+  .alert-high {
+    @apply bg-orange-950/50 border-orange-500/50 text-orange-100;
+    box-shadow: 0 0 15px hsl(var(--alert-high) / 0.2);
+  }
+
+  .alert-medium {
+    @apply bg-yellow-950/50 border-yellow-500/50 text-yellow-100;
+    box-shadow: 0 0 10px hsl(var(--alert-medium) / 0.2);
+  }
+
+  .alert-low {
+    @apply bg-green-950/50 border-green-500/50 text-green-100;
+  }
+
+  .alert-resolved {
+    @apply bg-gray-800/50 border-gray-600/50 text-gray-300;
+  }
+
+  .status-indicator {
+    @apply inline-flex items-center justify-center w-3 h-3 rounded-full;
+  }
+
+  .status-operational {
+    @apply bg-green-500;
+    box-shadow: 0 0 10px hsl(var(--status-operational) / 0.6);
+  }
+
+  .status-warning {
+    @apply bg-yellow-500;
+    box-shadow: 0 0 10px hsl(var(--status-warning) / 0.6);
+  }
+
+  .status-critical {
+    @apply bg-red-500;
+    box-shadow: 0 0 10px hsl(var(--status-critical) / 0.6);
+    animation: pulse var(--pulse-duration) infinite;
+  }
+
+  .pulse-glow {
+    animation: pulse-glow var(--pulse-duration) infinite;
+  }
+
+  .metric-bar {
+    @apply h-2 bg-secondary rounded-full overflow-hidden;
+  }
+
+  .metric-fill {
+    @apply h-full transition-all duration-500 ease-out;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 2px;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px hsl(var(--status-critical) / 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--status-critical) / 0.8);
+  }
+}
