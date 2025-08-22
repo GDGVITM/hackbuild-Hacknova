@@ -28,3 +28,11 @@ Thumbs.db
 .idea/
 .vscode/
 
+backend/
+env
+
+# Secrets file for API keys
+backend/.env
+
+# Firebase service account key
+backend/firebase-key.json
