@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+env/
+
+# Models
+Models/
+*.bin
+*.pt
+*.ckpt
+*.h5
+
+# Data
+*.csv
+*.zip
+*.json
+*.parquet
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
