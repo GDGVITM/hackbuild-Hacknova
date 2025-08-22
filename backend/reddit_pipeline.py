@@ -5,8 +5,8 @@ import requests
 # Reddit API Authentication
 
 reddit = praw.Reddit(
-    client_id="3RAOWRF3RnprUBMcd4TsnA",
-    client_secret="uqfaHJwBT4hV2gkJkDHvLVTt5YdCig",
+    client_id="",
+    client_secret="",
     user_agent="disaster-alert-bot/0.1 by Historical-Top5105"
 )
 
