@@ -1,141 +1,172 @@
-import { AlertPanel } from '@/components/AlertPanel';
-import { Navigation } from '@/components/Navigation';
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Navigation } from "@/components/Navigation";
+import { Check } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
-const mockAlerts = [
-  {
-    id: '1',
-    severity: 'critical' as const,
-    title: 'Building Collapse',
-    location: 'Downtown Mumbai, Maharashtra',
-    time: '2 mins ago',
-    reports: 15,
-    credibility: 9.2,
-    description: 'Multi-story building collapsed on Main Street',
-    coordinates: [19.0760, 72.8777] as [number, number]
-  },
-  {
-    id: '2',
-    severity: 'high' as const,
-    title: 'Flash Flood Warning',  
-    location: 'Austin, Texas, USA',
-    time: '7 mins ago',
-    reports: 8,
-    credibility: 8.7,
-    description: 'Water level rising rapidly near I-35 underpass',
-    coordinates: [30.2672, -97.7431] as [number, number]
-  },
-  {
-    id: '3',
-    severity: 'medium' as const,
-    title: 'Power Outage',
-    location: 'Brooklyn, New York, USA', 
-    time: '12 mins ago',
-    reports: 23,
-    credibility: 7.8,
-    description: 'Large scale power outage affecting multiple neighborhoods',
-    coordinates: [40.6782, -73.9442] as [number, number]
-  },
-  {
-    id: '4',
-    severity: 'high' as const,
-    title: 'Wildfire Spreading',
-    location: 'Los Angeles, California, USA',
-    time: '15 mins ago', 
-    reports: 31,
-    credibility: 9.1,
-    description: 'Fast-moving wildfire threatening residential areas',
-    coordinates: [34.0522, -118.2437] as [number, number]
-  },
-  {
-    id: '5',
-    severity: 'low' as const,
-    title: 'Traffic Accident',
-    location: 'London, UK',
-    time: '18 mins ago',
-    reports: 5,
-    credibility: 6.9,
-    description: 'Multi-vehicle accident on M25 causing delays',
-    coordinates: [51.5074, -0.1278] as [number, number]
-  }
-];
+export interface Alert {
+  id: string;
+  severity: "critical" | "high" | "medium" | "low";
+  title: string;
+  location: string;
+  time: string; // ISO string from backend
+  reports: number;
+  credibility: number;
+  description: string;
+  coordinates: [number, number];
+  details_url: string;
+  status: "active" | "resolved";
+}
 
 const Alerts = () => {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/api/alerts");
+        const data = await res.json();
+        setAlerts(data.alerts || []);
+      } catch (err) {
+        console.error("Failed to fetch alerts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 5000); // refresh every 5s
+    return () => clearInterval(interval);
+  }, []);
+
+  const getSeverityBadge = (severity: string) => {
+    const variants = {
+      critical: "destructive",
+      high: "secondary",
+      medium: "outline",
+      low: "default",
+    } as const;
+
+    return (
+      <Badge variant={variants[severity as keyof typeof variants] || "default"}>
+        {severity.toUpperCase()}
+      </Badge>
+    );
+  };
+
+  const getRelativeTime = (timestamp: string) => {
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffMs = now.getTime() - past.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return "just now";
+    if (diffMins === 1) return "1 min ago";
+    if (diffMins < 60) return `${diffMins} mins ago`;
+    const diffHrs = Math.floor(diffMins / 60);
+    return `${diffHrs}h ago`;
+  };
+
+  const handleDispatch = (alert: Alert) => {
+    toast({
+      title: "🚨 Rescue Team Has Been Notified",
+      description: `Dispatch initiated for: ${alert.title}`,
+    });
+  };
+
+  const handleResolve = async (alertId: string) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/api/alerts/${alertId}/resolve`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setAlerts((prev) =>
+          prev.map((a) => (a.id === alertId ? updated.alert : a))
+        );
+        toast({
+          title: "✅ Alert Resolved",
+          description: "This alert has been marked as resolved.",
+        });
+      }
+    } catch (err) {
+      console.error("Failed to resolve alert:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading alerts...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <main className="p-6">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-primary mb-6">🚨 Alert Management</h1>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Alert Panel */}
-            <div className="lg:col-span-2">
-              <AlertPanel alerts={mockAlerts} />
-            </div>
-            
-            {/* Filters */}
-            <div className="space-y-6">
-              <div className="bg-card p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">🔍 Filters</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Search</label>
-                    <input 
-                      type="text" 
-                      placeholder="Location/Keywords"
-                      className="w-full px-3 py-2 border rounded-md bg-background"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Time Range</label>
-                    <select className="w-full px-3 py-2 border rounded-md bg-background">
-                      <option>Last Hour</option>
-                      <option>Last 6 Hours</option>
-                      <option>Last 24 Hours</option>
-                      <option>Custom Range</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Severity</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-2" defaultChecked />
-                        Critical
-                      </label>
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-2" defaultChecked />
-                        High
-                      </label>
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-2" defaultChecked />
-                        Medium
-                      </label>
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-2" />
-                        Low
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Credibility Threshold</label>
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="10" 
-                      defaultValue="7"
-                      className="w-full"
-                    />
-                    <div className="text-sm text-muted-foreground">7.0+</div>
-                  </div>
+        <h1 className="text-2xl font-bold text-primary mb-6">
+          🚨 Active Alerts
+        </h1>
+
+        <div className="space-y-4">
+          {alerts.map((alert) => (
+            <Card
+              key={alert.id}
+              className="p-4 flex items-center justify-between"
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  {getSeverityBadge(alert.severity)}
+                  <span className="font-medium">{alert.title}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {getRelativeTime(alert.time)}
+                  </span>
                 </div>
+                <div className="text-sm text-muted-foreground mb-1">
+                  📍 {alert.location}
+                </div>
+                <div className="text-sm">{alert.description}</div>
               </div>
-            </div>
-          </div>
+
+              <div className="flex items-center gap-3 ml-4">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleDispatch(alert)}
+                >
+                  Dispatch
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (window.location.href = alert.details_url)}
+                >
+                  Details
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleResolve(alert.id)}
+                  disabled={alert.status === "resolved"}
+                >
+                  <Check
+                    className={`w-5 h-5 ${
+                      alert.status === "resolved"
+                        ? "text-emerald-500"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                </Button>
+              </div>
+            </Card>
+          ))}
         </div>
       </main>
     </div>

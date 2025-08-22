@@ -80,10 +80,44 @@ export function DisasterDashboard() {
     languages: ['english', 'hindi']
   });
 
+  // ✅ Dashboard summary state
+  const [summary, setSummary] = useState({
+    totalIncidents: 0,
+    resolved: 0,
+    active: 0,
+    avgResponse: 0,
+  });
+
+  // Clock updater
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ✅ Fetch dashboard summary from backend
+  const fetchDashboard = async () => {
+  try {
+      const res = await fetch("http://127.0.0.1:6000/api/dashboard");
+      const json = await res.json();
+      console.log("Fetched dashboard:", json); // 👈 add this
+      setSummary({
+        totalIncidents: json.totalIncidents,
+        resolved: json.resolved,
+        active: json.activeAlerts,
+        avgResponse: json.avgResponse,
+      });
+    } catch (err) {
+      console.error("Error fetching dashboard:", err);
+    }
+  };
+
+
+  // ✅ Auto-refresh every 5 mins
+  useEffect(() => {
+    fetchDashboard(); // initial fetch
+    const interval = setInterval(fetchDashboard, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -132,7 +166,7 @@ export function DisasterDashboard() {
             <span>Accuracy: 89.2%</span>
           </div>
           <Badge variant="secondary" className="bg-alert-critical text-white">
-            23 Active
+            {summary.active} Active
           </Badge>
           <Button variant="outline" size="sm">
             <Settings className="w-4 h-4 mr-2" />
@@ -247,38 +281,29 @@ export function DisasterDashboard() {
               <h3 className="font-semibold text-lg mb-4">TODAY'S INCIDENT SUMMARY</h3>
               <div className="space-y-4 text-sm">
                 <div>
-                  <div className="font-mono text-xs text-muted-foreground">August 21, 2025 - Day Shift</div>
+                  <div className="font-mono text-xs text-muted-foreground">
+                    {new Date().toLocaleDateString()} - Day Shift
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-2xl font-bold">284</div>
+                    <div className="text-2xl font-bold">{summary.totalIncidents}</div>
                     <div className="text-xs text-muted-foreground">Total Incidents</div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
-                      <span className="text-green-400">Resolved: 261</span>
+                      <span className="text-green-400">Resolved: {summary.resolved}</span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-red-400">Active: 23</span>
+                      <span className="text-red-400">Active: {summary.active}</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-lg font-semibold">3.2 min</div>
+                  <div className="text-lg font-semibold">{summary.avgResponse} min</div>
                   <div className="text-xs text-muted-foreground">Average Response Time</div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>🔥 Fire: 45 (16%)</div>
-                  <div>🔴 Critical: 5</div>
-                  <div>🌊 Flood: 38 (13%)</div>
-                  <div>🟠 High: 18</div>
-                  <div>⚡ Weather: 67 (24%)</div>
-                  <div>🟡 Medium: 89</div>
-                  <div>🚗 Accidents: 89 (31%)</div>
-                  <div>🟢 Low: 172</div>
                 </div>
               </div>
             </Card>
