@@ -19,7 +19,7 @@ interface SystemHealth {
     posts_processed_today: number;
     current_rate_ppm: number;
     response_time_avg_ms: number;
-    classification_accuracy: number;
+    classification_accuracy: number; // percentage value from backend
   };
   data_sources: { name: string; status: string }[];
   network_status: { uptime_percent: number; latency_ms: number; bandwidth_gb: number };
@@ -52,7 +52,7 @@ const SystemMetrics = ({ data }: SystemMetricsProps) => (
     <p>Posts Processed: {data.system_performance.posts_processed_today.toLocaleString()}</p>
     <p>Current Rate: {data.system_performance.current_rate_ppm.toLocaleString()} posts/min</p>
     <p>Avg Response Time: {data.system_performance.response_time_avg_ms} ms</p>
-    <p>Classification Accuracy: {(data.system_performance.classification_accuracy * 100).toFixed(2)}%</p>
+    <p>Classification Accuracy: {data.system_performance.classification_accuracy.toFixed(2)}%</p>
   </Card>
 );
 
@@ -132,12 +132,8 @@ const Analytics = () => {
           <h1 className="text-3xl font-bold text-primary mb-6">📊 Analytics & Metrics</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <SystemMetrics data={data.system_health} />
-            </div>
-            <div>
-              <Timeline data={data.timeline} />
-            </div>
+            <SystemMetrics data={data.system_health} />
+            <Timeline data={data.timeline} />
           </div>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
