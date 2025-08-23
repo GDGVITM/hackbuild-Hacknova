@@ -64,6 +64,23 @@ Our AI system uses a **multi-stage pipeline** for accurate disaster detection:
 
 ---
 
+## 📊 System Architecture
+
+```mermaid
+flowchart TD
+    R[Reddit API / Social Media] -->|New Post| B[Flask Backend]
+    B -->|Sarcasm Model| S[Sarcasm Detection]
+    S -->|Binary Classifier| D[Binary Disaster Classifier]
+    D -->|Multiclass Disaster Model| M[Multiclass Disaster Model]
+    M -->|NER + Geocoding| L[Location Extraction]
+    L -->|Gemini Verification| G[Gemini Disaster Type Check]
+    G -->|Confirmed Disaster| F[Firebase Firestore]
+    F -->|Recent Incidents API| FE[Next.JS Frontend Dashboard]
+
+```
+
+---
+
 ## 🛠️ Tech Stack  
 - **Frontend:** Next.js + Tailwind CSS  
 - **Backend:** Flask (Python)  
