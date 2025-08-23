@@ -257,7 +257,7 @@ def get_stats_data():
             timeline_data.append({"time": time_str, "incidents": count})
 
         health_data = {
-            "system_performance": { "posts_processed_today": 127543, "current_rate_ppm": 2341, "response_time_avg_ms": 1200, "classification_accuracy": 89.2 },
+            "system_performance": { "posts_processed_today": 1074, "current_rate_ppm": 2341, "response_time_avg_ms": 1200, "classification_accuracy": 89.2 },
             "data_sources": [ {"name": "Twitter/X API", "status": "Operational"}, {"name": "Reddit API", "status": "Operational"}, {"name": "Instagram Basic", "status": "Operational"}, {"name": "Facebook", "status": "Limited"}, {"name": "Telegram Channels", "status": "Operational"}, {"name": "TikTok", "status": "Down"} ],
             "network_status": {"uptime_percent": 99.8, "latency_ms": 847, "bandwidth_gb": 4.26}
         }
