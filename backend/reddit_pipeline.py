@@ -1,13 +1,17 @@
 import praw
 import requests
+from dotenv import load_dotenv
+import os
 
-
+load_dotenv()
 # Reddit API Authentication
 
+# Reddit API Authentication
 reddit = praw.Reddit(
-    client_id="",
-    client_secret="",
-    user_agent="disaster-alert-bot/0.1 by Historical-Top5105"
+    client_id ="3RAOWRF3RnprUBMcd4TsnA",
+    client_secret ="uqfaHJwBT4hV2gkJkDHvLVTt5YdCig",
+    user_agent ="disaster-alert-bot/0.1 by Historical-Top5105"
+
 )
 
 # Flask backend API endpoint

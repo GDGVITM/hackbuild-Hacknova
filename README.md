@@ -1,107 +1,92 @@
-# Disaster Alert System - Emergency Management Dashboard
+# 🚨 Disaster Alert System – HackNova
 
-A professional **AI-powered command center** designed for emergency dispatch operators and crisis management teams.  
-Currently in **active development**:  
-- ✅ Frontend created with **demo data**  
-- ✅ Backend ready with **custom ML models** & APIs  
-- 🔄 Integration work in progress (connecting frontend with backend & Firestore)  
+**Team Name:** HackNova  
+**Team Members:**  
+- Anish Bandal (Team Lead)  
+- Priti Chavan  
+- Swati Mane  
+- Atharva Gitaye  
 
 ---
 
-## 🔬 Machine Learning & AI Models
+## 📌 About the Project  
+The **Disaster Alert System** is an **AI-powered real-time monitoring dashboard** that detects, verifies, and tracks natural disasters from **social media (Reddit)**.  
+It provides emergency teams with **credible alerts, severity levels, and geolocation mapping** for better disaster management.  
 
-This system is powered by **custom fine-tuned NLP models** built using **Hugging Face Transformers**.  
-Each stage of analysis is handled by a specialized model:
+---
+
+## 🔑 Key Features  
+- 🌐 **Hybrid AI Pipeline**  
+  - Custom ML models for sarcasm detection, binary disaster classification, and disaster type classification.  
+  - **Gemini API fallback** to re-check low-confidence predictions.  
+
+- 📍 **Location Extraction & Mapping**  
+  - NER + OpenStreetMap geocoding to pinpoint disaster locations.  
+
+- 🔥 **Credibility & Severity Scoring**  
+  - Multiple user posts increase credibility.  
+  - Auto-assigns severity levels (Low, Medium, High, Critical).  
+
+- 📊 **Next.js Frontend Dashboard**  
+  - Real-time map visualization & incident logs from **Firebase Firestore**.  
+
+- ⚡ **Reddit Integration**  
+  - Streams posts from disaster-related subreddits in real time.  
+
+---
+
+## 🤖 AI Models & Pipeline  
+
+Our AI system uses a **multi-stage pipeline** for accurate disaster detection:
 
 1. **Sarcasm Detection Model**  
-   - Fine-tuned on social media datasets.  
-   - Purpose: Filter out sarcastic / ironic posts that mention disasters but are not real incidents.  
-   - Example:  
-     - Input: `"Wow, what an amazing earthquake! My coffee spilled 🙄"`  
-     - Output: `"sarcasm: true"` → ignored from pipeline.  
+   - Filters out sarcastic or ironic posts.  
+   - Example: *"Wow, what an amazing earthquake 🙄"* → Marked as sarcasm → Ignored.  
 
 2. **Binary Disaster Classifier**  
-   - Model trained to identify whether a text indicates a **real disaster event** or **not**.  
-   - Input: `"Severe flooding in Pakistan displaces thousands"`  
-   - Output: `"disaster: true (0.97 confidence)"`.  
+   - Determines if a post actually describes a disaster or not.  
+   - Example: *"Severe flooding in Pakistan displaces thousands"* → `Disaster: True`.  
 
 3. **Multiclass Disaster Classifier**  
-   - Classifies the **type of disaster** (11 categories currently supported).  
-   - Labels: `["earthquake", "flood", "fire", "hurricane", "tornado", "volcano", "landslide", "tsunami", "cyclone", "storm", "other"]`  
-   - Example:  
-     - Input: `"Massive earthquake in Japan, tsunami warning issued"`  
-     - Output: `"earthquake"`.  
+   - Identifies **which disaster** it belongs to (Earthquake, Flood, Fire, Hurricane, etc. – 11 types).  
 
-4. **NER Location Extractor**  
-   - Pre-trained **Named Entity Recognition (NER)** model (`dslim/bert-base-NER`).  
-   - Extracts **places** mentioned in text (cities, countries, regions).  
-   - Integrated with **OpenStreetMap Nominatim API** to convert names → GPS coordinates.  
+4. **Location Extraction (NER)**  
+   - Uses **Named Entity Recognition (NER)** to detect locations in text.  
+   - Integrated with **OpenStreetMap** for latitude/longitude mapping.  
 
 ---
 
-## 🌐 Reddit Data Pipeline
-
-We use the **Reddit API (PRAW)** to collect **real-time posts** from multiple subreddits related to disasters:  
-- Examples: `news`, `TropicalWeather`, `Earthquakes`, `Volcanoes`, `StormComing`, etc.  
-- Each new Reddit post is streamed → sent to the **backend `/analyze` API**.  
-
-### Processing Flow:
-1. Reddit Post Captured (`title + body`).  
-2. Text sent to **Flask API → ML Pipeline**.  
-3. Models applied in sequence:  
-   - Sarcasm filter → Binary classifier → Disaster type classifier → Location NER.  
-4. If confirmed as **real disaster**, incident stored in **Firebase Firestore** with:  
-   - `text, type, confidence, location, timestamp`.  
-5. Frontend fetches **recent incidents (last 30 days)** via API → displays on **map & dashboard**.  
+## 🔄 Hybrid Structure (Models + Gemini)  
+- If the confidence score from our **custom ML models** is **high**, we trust the prediction.  
+- If confidence is **low or uncertain**, the text is re-verified using **Google Gemini API**.  
+- The most reliable output is then stored in Firestore.  
+- This ensures **high accuracy** even when custom models are unsure.  
 
 ---
 
-## 🚨 Key Features
-
-- **AI-powered disaster monitoring** with fine-tuned NLP models  
-- **Reddit real-time pipeline** for early-warning disaster signals  
-- **Firestore integration** for real-time storage & frontend syncing  
-- **Confidence scoring & sarcasm filtering** to reduce false alarms  
-- **Map visualization** with location extraction + geocoding  
-
----
-
-## 📊 System Architecture
-
-```mermaid
-flowchart TD
-    R[Reddit API / Social Media] -->|New Post| B[Flask Backend]
-    B -->|Sarcasm Model| S
-    S -->|Binary Classifier| D
-    D -->|Multiclass Disaster Model| M
-    M -->|NER + Geocoding| L
-    L -->|Confirmed Disaster| F[Firebase Firestore]
-    F -->|Recent Incidents API| FE[React Frontend Dashboard]
-```
+## 🛠️ Tech Stack  
+- **Frontend:** Next.js + Tailwind CSS  
+- **Backend:** Flask (Python)  
+- **AI Models:** Custom Transformers + Gemini API (hybrid)  
+- **Database:** Firebase Firestore  
+- **Data Source:** Reddit API (PRAW)  
 
 ---
 
-## 🛠️ Technology Stack
-
-- **Frontend**: React + TypeScript + Vite  
-- **Styling**: Tailwind CSS (custom emergency theme)  
-- **Charts**: Recharts (trend analytics)  
-- **Maps**: OpenStreetMap + Mapbox integration  
-- **Backend**: Flask + Hugging Face Transformers  
-- **Database**: Firebase Firestore (real-time storage)  
-- **Data Sources**: Reddit API, (Twitter/X optional)  
-
----
-
-## 🔧 Development Status
-
-- Frontend: Completed with **mock/demo data**  
-- Backend: Completed (API endpoints + ML models)  
-- Integration: Ongoing (backend ↔ frontend ↔ Firestore)  
+## 🚀 How It Works  
+1. Reddit posts are streamed and passed to the backend.  
+2. Posts go through AI pipeline → Sarcasm filter → Binary classifier → Disaster type classifier.  
+3. Low-confidence results checked with Gemini.  
+4. Locations extracted and geocoded.  
+5. Events stored in Firestore with:  
+   - `disaster_type, severity, credibility_score, reports_count, source_link, resolved`.  
+6. Frontend dashboard fetches incidents and displays them on a **map and analytics dashboard**.  
 
 ---
 
-🚧 **Note**: This project is currently in **active development**.  
-- The **backend AI models** are functional & fine-tuned.  
-- The **frontend dashboard** is live with mock data.  
-- Next phase: Full **integration & real-time pipelines**.  
+## 📂 Project Status  
+✅ Frontend with real-time Firestore sync  
+✅ Backend with hybrid AI pipeline  
+✅ Reddit ingestion & Firestore storage  
+✅ Severity & credibility scoring  
+🚀 Fully integrated **Emergency Dashboard**  
