@@ -11,17 +11,15 @@ from collections import Counter
 # --- Load environment variables from .env file ---
 load_dotenv()
 
-# -----------------------------
+
 # Firebase Setup
-# -----------------------------
 # Ensure your "firebase-key.json" is in the same directory as this script
 cred = credentials.Certificate("firebase-key.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# -----------------------------
+
 # Load Local Models
-# -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "Models")
 
@@ -36,9 +34,8 @@ disaster_multiclass_classifier = pipeline("text-classification", model=disaster_
 ner = pipeline("ner", model="dslim/bert-base-NER", grouped_entities=True, aggregation_strategy="simple")
 print("✅ All models loaded successfully.")
 
-# -----------------------------
+
 # Configuration & Helpers
-# -----------------------------
 ID2LABEL = {
     0: "earthquake", 1: "flood", 2: "fire", 3: "hurricane",
     4: "tornado", 5: "volcano", 6: "landslide", 7: "tsunami",
@@ -88,9 +85,7 @@ async def verify_with_gemini(text, predicted_type):
         print(f"🔥 Gemini API Error: {e}")
         return predicted_type
 
-# -----------------------------
 # Flask App
-# -----------------------------
 app = Flask(__name__)
 CORS(app)
 
@@ -181,17 +176,6 @@ async def analyze():
         doc_ref.set(new_disaster_data)
         return jsonify({ "status": "created", "data": new_disaster_data })
 
-# @app.route("/disasters/<disaster_id>/resolve", methods=["POST"])
-# def resolve_disaster(disaster_id):
-#     try:
-#         doc_ref = db.collection("disasters").document(disaster_id)
-#         doc_ref.update({
-#             "resolved": True,
-#             "resolved_at": datetime.now(UTC).isoformat()
-#         })
-#         return jsonify({"status": "success", "message": f"Disaster {disaster_id} marked as resolved."})
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/dashboard", methods=["GET"])
 def get_dashboard_data():
