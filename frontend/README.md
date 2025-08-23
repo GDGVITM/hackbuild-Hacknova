@@ -1,104 +1,110 @@
 # Disaster Alert System - Emergency Management Dashboard
 
-A professional command center interface designed for emergency dispatch operators and crisis management teams. This system provides real-time disaster monitoring, alert processing, and incident response coordination.
+A professional **AI-powered command center** designed for emergency
+dispatch operators and crisis management teams.\
+Currently in **active development**:\
+- ✅ Frontend created with **Next.js** and **demo data**\
+- ✅ Backend powered by **custom ML models** & **Gemini hybrid
+verification**\
+- 🔄 Integration in progress (connecting frontend with backend &
+Firestore)
 
-## Project Features
+------------------------------------------------------------------------
 
-🚨 **Real-time Alert Monitoring**
-- Live incident tracking with severity-based color coding
-- Automated credibility scoring and verification
-- Multi-source data aggregation from social media APIs
+## 🔬 Machine Learning & AI Models
 
-🗺️ **Interactive Emergency Map**
-- Global incident visualization with clustering
-- Interactive markers with detailed incident popups
-- Multiple map layers (satellite, terrain, weather overlays)
-- Mapbox integration for professional mapping
+This system uses a **hybrid AI approach** combining **custom fine-tuned
+NLP models** and **Google Gemini** for enhanced accuracy.\
+When the confidence score is low, Gemini performs a secondary
+verification to improve reliability.
 
-📊 **System Performance Metrics**
-- Real-time processing statistics
-- Data source health monitoring
-- Network latency and accuracy tracking
-- 24/7 operational status indicators
+### Custom Models
 
-📈 **Analytics Dashboard**
-- Historical incident timeline visualization
-- Daily summary reports with trend analysis
-- Geographic hotspot identification
-- Response time optimization metrics
+1.  **Sarcasm Detection Model**
+    -   Identifies sarcasm or irony in social media text to reduce false
+        positives.
+2.  **Binary Disaster Classifier**
+    -   Determines if a post indicates a **real disaster** or **not**.
+3.  **Multiclass Disaster Classifier**
+    -   Identifies the **type of disaster** (11 supported categories).
 
-⚙️ **Advanced Filtering**
-- Multi-criteria incident filtering
-- Customizable credibility thresholds
-- Time-based data views
-- Disaster type categorization
+### Hybrid Verification with Gemini
 
-## Technology Stack
+-   If a model returns **low confidence (\<70%)**, the text is passed to
+    **Gemini** for secondary analysis.\
+-   Ensures **higher accuracy** and reduces false alarms.
 
-- **Frontend**: React + TypeScript + Vite
-- **Styling**: Tailwind CSS with custom emergency management theme
-- **Charts**: Recharts for data visualization
-- **Maps**: Mapbox GL JS for interactive mapping
-- **UI Components**: shadcn/ui with custom emergency variants
-- **State Management**: React hooks with real-time updates
+------------------------------------------------------------------------
 
-## Design Philosophy
+## 🌐 Reddit Data Pipeline
 
-Built for large screens (1920x1080+) and 24/7 operation with:
-- High information density for quick decision-making
-- Professional dark theme to reduce eye strain
-- Color-coded severity system (Critical/High/Medium/Low)
-- Minimal cognitive load during high-stress situations
-- Multi-monitor support for command centers
+We use the **Reddit API (PRAW)** to collect **real-time posts** from
+multiple disaster-related subreddits.
 
-## Getting Started
+### Processing Flow:
 
-1. **Clone and Install**
-   ```bash
-   git clone <repository-url>
-   cd disaster-alert-system
-   npm install
-   ```
+1.  Reddit post captured (`title + body`).\
+2.  Text sent to **Flask API → ML Pipeline**.\
+3.  Custom models applied in sequence:
+    -   Sarcasm filter → Binary classifier → Disaster type classifier →
+        Location NER.\
+4.  Low-confidence predictions verified by **Gemini hybrid pipeline**.\
+5.  Confirmed disasters stored in **Firebase Firestore**.\
+6.  Frontend fetches **recent incidents (last 30 days)** via API →
+    displayed on **map & dashboard**.
 
-2. **Set up Mapbox (Optional)**
-   - Get your Mapbox public token at [mapbox.com](https://mapbox.com)
-   - Enter the token in the map interface when prompted
-   - Or skip for demo mode with mock visualizations
+------------------------------------------------------------------------
 
-3. **Start Development**
-   ```bash
-   npm run dev
-   ```
+## 🚨 Key Features
 
-4. **Production Deployment**
-   - Build: `npm run build`
+-   **AI-powered disaster monitoring** with custom + Gemini models\
+-   **Reddit real-time pipeline** for early disaster signals\
+-   **Firestore integration** for real-time syncing\
+-   **Confidence scoring & hybrid verification** for improved
+    reliability\
+-   **Map visualization** with location extraction and geocoding
 
-## Interface Layout
+------------------------------------------------------------------------
 
-**Header Bar**: System status, performance metrics, global controls
-**Left Sidebar**: Active alerts panel + incident filters & controls  
-**Central Area**: Interactive world map with real-time incident markers
-**Right Sidebar**: System metrics + daily overview + timeline visualization
-**Footer**: System status bar with uptime and resource monitoring
+## 📊 System Architecture
 
-## Alert Severity Levels
+``` mermaid
+flowchart TD
+    R[Reddit API / Social Media] -->|New Post| B[Flask Backend]
+    B -->|Sarcasm Model| S
+    S -->|Binary Classifier| D
+    D -->|Multiclass Disaster Model| M
+    M -->|NER + Geocoding| L
+    L -->|Confidence Check| C{Confidence < 70%?}
+    C -->|Yes| G[Gemini Verification]
+    C -->|No| F[Firebase Firestore]
+    G -->|Verified| F
+    F -->|Recent Incidents API| FE[Next.js Frontend Dashboard]
+```
 
-🔴 **Critical**: Life-threatening emergencies requiring immediate response
-🟠 **High**: Significant incidents with potential for escalation  
-🟡 **Medium**: Moderate incidents requiring monitoring
-🟢 **Low**: Minor incidents for awareness and documentation
-⚫ **Resolved**: Completed incidents for historical reference
+------------------------------------------------------------------------
 
-## Data Sources
+## 🛠️ Technology Stack
 
-Supports integration with:
-- Twitter/X API for social media monitoring
-- Reddit API for community reports
-- Instagram for visual incident documentation  
-- Telegram channels for real-time updates
-- Custom webhook integrations
-- Government alert feeds
+-   **Frontend**: Next.js + TypeScript + Tailwind CSS\
+-   **Charts**: Recharts for analytics\
+-   **Maps**: OpenStreetMap + Mapbox\
+-   **Backend**: Flask + Hugging Face Transformers + Gemini API\
+-   **Database**: Firebase Firestore (real-time)\
+-   **Data Sources**: Reddit API, Twitter/X (optional)
 
----
+------------------------------------------------------------------------
 
-Built for emergency management professionals who need reliable, real-time situational awareness.
+## 🔧 Development Status
+
+-   Frontend: Completed with **Next.js** \
+-   Backend: Completed (API endpoints + custom models + Gemini
+    integration)\
+-   Integration: Ongoing (backend ↔ frontend ↔ Firestore)
+
+------------------------------------------------------------------------
+
+🚧 **Note**: This project is in **active development**.\
+- Backend AI and Gemini verification are fully functional.\
+- Next.js dashboard live with mock/demo data.\
+- Next phase: Full **real-time integration**.
