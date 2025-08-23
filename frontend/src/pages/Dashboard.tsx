@@ -74,12 +74,17 @@ const Dashboard = () => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const backendData = (await res.json()) as BackendData;
 
+        // ✅ Sort incidents by most recent timestamp first
+        const sortedIncidents = backendData.todays_incidents.sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+
         const transformedData: DashboardData = {
           totalIncidents: backendData.overview.totalIncidents,
           resolved: backendData.overview.resolved,
           activeAlerts: backendData.overview.activeAlerts,
           avgResponse: backendData.overview.avgResponse * 60,
-          alerts: backendData.todays_incidents.map((incident) => ({
+          alerts: sortedIncidents.map((incident) => ({
             id: incident.id,
             severity: incident.severity.toLowerCase() as Alert["severity"],
             title: incident.disaster_type.toUpperCase(),
@@ -210,7 +215,7 @@ const Dashboard = () => {
         {/* Alerts Section */}
         <Card className="p-4 sm:p-6">
           <h2 className="text-lg sm:text-xl font-semibold mb-4">
-            🚨 Recent Alerts Today
+            🚨 Most Recent Alerts
           </h2>
           <div className="space-y-4">
             {data && data.alerts.length > 0 ? (
