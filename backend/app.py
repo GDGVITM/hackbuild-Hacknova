@@ -8,39 +8,36 @@ import requests, os, asyncio
 from dotenv import load_dotenv
 from collections import Counter
 
-# --- Load environment variables from .env file ---
+# --- Load environment variables ---
 load_dotenv()
 
-
-# Firebase Setup
-# Ensure your "firebase-key.json" is in the same directory as this script
+# --- Firebase Setup ---
 cred = credentials.Certificate("firebase-key.json")
-firebase_admin.initialize_app(cred)
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-
-# Load Local Models
+# --- Load Local Models ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "Models")
 
 sarcasm_model_path = os.path.join(MODEL_DIR, "sarcasm_model").replace("\\", "/")
 disaster_binary_model_path = os.path.join(MODEL_DIR, "disaster_model").replace("\\", "/")
-disaster_multiclass_model_path = os.path.join(MODEL_DIR, "disaster_multiclass_model").replace("\\", "/")
+# NOTE: The local multiclass model is no longer loaded or used.
 
-print("✅ Loading models...")
+print("✅ Loading essential models...")
 sarcasm_classifier = pipeline("text-classification", model=sarcasm_model_path, tokenizer=sarcasm_model_path)
 disaster_binary_classifier = pipeline("text-classification", model=disaster_binary_model_path, tokenizer=disaster_binary_model_path)
-disaster_multiclass_classifier = pipeline("text-classification", model=disaster_multiclass_model_path, tokenizer=disaster_multiclass_model_path)
 ner = pipeline("ner", model="dslim/bert-base-NER", grouped_entities=True, aggregation_strategy="simple")
-print("✅ All models loaded successfully.")
+print("✅ Essential models loaded successfully.")
 
-
-# Configuration & Helpers
+# --- Configuration & Helpers ---
 ID2LABEL = {
     0: "earthquake", 1: "flood", 2: "fire", 3: "hurricane",
     4: "tornado", 5: "volcano", 6: "landslide", 7: "tsunami",
     8: "cyclone", 9: "storm", 10: "other"
 }
+VALID_CATEGORIES = list(ID2LABEL.values())
 
 SEVERITY_MAPPING = {
     "earthquake": "Critical", "tsunami": "Critical", "volcano": "Critical",
@@ -65,27 +62,42 @@ def get_coordinates(place):
         print(f"⚠️ Geocoding error for {place}: {e}")
     return None
 
-async def verify_with_gemini(text, predicted_type):
+async def get_disaster_type_from_gemini(text):
     if not GEMINI_API_KEY:
-        print("⚠️ Gemini API Key not set. Skipping verification.")
-        return predicted_type
+        print("🔴 CRITICAL: Gemini API Key is missing. Cannot classify disaster type.")
+        return None
 
-    prompt = f"""Analyze the following text and determine the most likely disaster type. The initial prediction is '{predicted_type}'. Respond with only a single word for the disaster type (e.g., 'fire', 'flood'). Text: "{text}" """
+    prompt = f"""
+    Analyze the following text and classify it into ONE of the following disaster categories: {VALID_CATEGORIES}.
+    
+    The text is: "{text}"
+    
+    Respond with only a single word from the provided list. If the text does not clearly match any category, respond with 'other'.
+    """
+    
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     
+    print("🧠 Asking Gemini for disaster type...")
     try:
         response = requests.post(api_url, json=payload, headers={'Content-Type': 'application/json'}, timeout=10)
         response.raise_for_status()
         result = response.json()
         verified_type = result['candidates'][0]['content']['parts'][0]['text'].strip().lower()
-        print(f"✅ Gemini verification: Original='{predicted_type}', Verified='{verified_type}'")
-        return verified_type if verified_type in ID2LABEL.values() else predicted_type
+        
+        if verified_type in VALID_CATEGORIES:
+            print(f"✅ Gemini classification successful: Type = '{verified_type}'")
+            return verified_type
+        else:
+            print(f"⚠️ Gemini gave an unexpected response ('{verified_type}'). Defaulting to 'other'.")
+            return "other"
     except Exception as e:
-        print(f"🔥 Gemini API Error: {e}")
-        return predicted_type
+        print(f"🔥 CRITICAL: Gemini API Error: {e}. Cannot classify disaster type.")
+        return None
 
+# -----------------------------
 # Flask App
+# -----------------------------
 app = Flask(__name__)
 CORS(app)
 
@@ -98,15 +110,22 @@ async def analyze():
     if not text:
         return jsonify({"error": "No text provided"}), 400
 
-    # 1. Sarcasm Check (Filter)
+    # 1. Sarcasm & Binary Disaster Checks
     sarcasm_pred = sarcasm_classifier(text)[0]
-    if sarcasm_pred["label"] == "LABEL_1" and sarcasm_pred["score"] > 0.8:
-        return jsonify({"sarcasm": True, "message": "Post identified as sarcastic and ignored."})
-
-    # 2. Disaster Binary Classification
+    if sarcasm_pred["label"] == "LABEL_1":
+        return jsonify({"sarcasm": True, "message": "Post identified as sarcastic."})
+    
     binary_pred = disaster_binary_classifier(text)[0]
     if binary_pred["label"] != "LABEL_1" or binary_pred["score"] < 0.7:
         return jsonify({"disaster": False, "message": "Post not classified as a disaster."})
+
+    # 2. Disaster Type Classification (Gemini Only)
+    disaster_type = await get_disaster_type_from_gemini(text)
+
+    if disaster_type is None:
+        return jsonify({"error": "Failed to classify disaster type with AI provider."}), 500
+    if disaster_type == "other":
+        return jsonify({"disaster": True, "disaster_type": "other", "message": "Verified as a general disaster, but not a specific type."})
 
     # 3. Location Extraction
     locations = []
@@ -121,23 +140,12 @@ async def analyze():
     if not locations:
         return jsonify({"disaster": True, "message": "Disaster detected but no location found."})
 
-    # 4. Disaster Type Classification (Initial)
-    try:
-        multiclass_pred = disaster_multiclass_classifier(text)[0]
-        label_index = int(multiclass_pred["label"].split("_")[1])
-        disaster_type = ID2LABEL.get(label_index, "other")
-    except (IndexError, ValueError):
-        disaster_type = "other"
-
-    # 5. Hybrid Model: Verify with Gemini
-    verified_disaster_type = await verify_with_gemini(text, disaster_type)
-    
-    # 6. Check for Existing Disaster & Update
+    # 4. Check for Existing Disaster & Update
     primary_location = locations[0]['place']
     twenty_four_hours_ago = datetime.now(UTC) - timedelta(hours=24)
     
     query = db.collection("disasters").where(field_path="primary_location", op_string="==", value=primary_location) \
-                                      .where(field_path="disaster_type", op_string="==", value=verified_disaster_type) \
+                                      .where(field_path="disaster_type", op_string="==", value=disaster_type) \
                                       .where(field_path="resolved", op_string="==", value=False) \
                                       .where(field_path="timestamp", op_string=">=", value=twenty_four_hours_ago.isoformat())
     
@@ -167,16 +175,15 @@ async def analyze():
         doc_ref = db.collection("disasters").document()
         new_disaster_data = {
             "id": doc_ref.id, "text": text, "source_link": source_link,
-            "disaster_type": verified_disaster_type, "primary_location": primary_location,
+            "disaster_type": disaster_type, "primary_location": primary_location,
             "all_locations": locations, "report_count": 1, "credibility_score": 0.50,
-            "severity": SEVERITY_MAPPING.get(verified_disaster_type, "Low"),
+            "severity": SEVERITY_MAPPING.get(disaster_type, "Low"),
             "resolved": False, "timestamp": datetime.now(UTC).isoformat(),
             "last_reported_at": datetime.now(UTC).isoformat(), "resolved_at": None
         }
         doc_ref.set(new_disaster_data)
         return jsonify({ "status": "created", "data": new_disaster_data })
-
-
+    
 @app.route("/api/dashboard", methods=["GET"])
 def get_dashboard_data():
     try:
