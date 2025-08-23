@@ -9,7 +9,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid
+  CartesianGrid,
+  Cell
 } from 'recharts';
 
 // --- Type Definitions ---
@@ -56,25 +57,38 @@ const SystemMetrics = ({ data }: SystemMetricsProps) => (
   </Card>
 );
 
-const Timeline = ({ data }: TimelineProps) => (
-  <Card className="p-6">
-    <h3 className="text-lg font-semibold mb-4">⏳ Incident Timeline (Last 24 Hours)</h3>
-    <div className="w-full h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="time" tick={{ fontSize: 12 }} />
-          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-          <Tooltip
-            contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', fontSize: '0.85rem' }}
-            formatter={(value: number) => [`${value} incidents`, 'Incidents']}
-          />
-          <Bar dataKey="incidents" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  </Card>
-);
+const Timeline = ({ data }: TimelineProps) => {
+  // function to determine bar color based on incidents
+  const getBarColor = (incidents: number) => {
+    if (incidents >= 8) return '#ef4444'; // red
+    if (incidents >= 4) return '#f59e0b'; // orange/yellow
+    return '#22c55e'; // green
+  };
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">⏳ Incident Timeline (Last 24 Hours)</h3>
+      <div className="w-full h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="time" tick={{ fontSize: 12 }} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', fontSize: '0.85rem' }}
+              formatter={(value: number) => [`${value} incidents`, 'Incidents']}
+            />
+            <Bar dataKey="incidents" radius={[4, 4, 0, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getBarColor(entry.incidents)} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </Card>
+  );
+};
 
 // --- Main Analytics Component ---
 
